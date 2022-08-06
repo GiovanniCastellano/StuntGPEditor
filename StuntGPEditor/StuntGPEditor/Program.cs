@@ -21,7 +21,7 @@ namespace StuntGPEditor
 
             mainForm = new Form1();
             FileManager fileManager = new FileManager();
-            fileManager.Read("/wads/setup.wad");
+            fileManager.Read("wads/setup.wad");
 
             Application.Run(mainForm);
         }
