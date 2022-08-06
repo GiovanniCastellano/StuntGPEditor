@@ -45,7 +45,8 @@ namespace StuntGPEditor
         private void buttonHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show(
-                "StuntGPEditor made by Giovanni Castellano\n\n" +
+                "StuntGPEditor made by Giovanni Castellano\n" +
+                "Github repository: https://github.com/GiovanniCastellano/StuntGPEditor\n\n" +
                 "- The editor can automatically load the correct file if it is run from the main game directory," +
                 " otherwise, click the open button to select the file \"wads/setup.wad\"\n\n" +
                 "- Changes must respect the byte length of the original file, this means values on the same row cannot be changed in " +
