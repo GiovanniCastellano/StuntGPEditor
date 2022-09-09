@@ -1,12 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
+using System.Linq;
 using System.Windows.Forms;
+using Syroot.Worms;
 
 namespace StuntGPEditor
 {
     public class FileManager
     {
+        private const int carRow = 1;
+        private const int startingPoint = 728;
+
         public void Read(string filename)
         {
             if(!filename.Contains("setup.wad"))
@@ -17,18 +22,24 @@ namespace StuntGPEditor
 
             CustomConsole.WriteMessage("Reading data at \"" + filename + "\"... ");
 
-            StreamReader streamReader;
-            int bytesRead = 0;
+
             char[] buffer = new char[10000];
+            Archive archive = new Archive();
+            ICollection<byte[]> archiveValues;
+            int bytesRead = 0;
 
             try
             {
-                streamReader = new StreamReader(filename);
-                buffer = new char[9709];
-                streamReader.Read(buffer, 0, 9708);
-                buffer = new char[6307];
-                bytesRead = streamReader.Read(buffer, 0, 6306);
-                streamReader.Close();
+                archive.Load(filename);
+                archiveValues = archive.Values;
+                bytesRead = archiveValues.ElementAt(carRow).Length - startingPoint;
+                buffer = new char[bytesRead + 1];
+
+                for(int j = startingPoint; j < archiveValues.ElementAt(carRow).Length; j++)
+                {
+                    Console.Write((char)archiveValues.ElementAt(carRow)[j]);
+                    buffer[j - startingPoint] = (char)archiveValues.ElementAt(carRow)[j];
+                }
 
                 if (!(new string(buffer)).Contains("Car01"))
                 {
@@ -130,13 +141,6 @@ namespace StuntGPEditor
 
                 carList.Add(car);
             }
-
-            /*foreach (Car car in carList)
-            {
-                Console.Write(car.ToString());
-            }
-            Console.WriteLine("EOF");*/
-
 
             BindingList<Car> cars = new BindingList<Car>();
             foreach(Car car in carList)
@@ -263,27 +267,30 @@ namespace StuntGPEditor
 
                 carList.Add(car);
             }
-        
-            for(int i = 0; i < carList.Count; i++)
-            {
-                if (carList[i].ToString().Length != Program.carList[i].ToString().Length)
-                {
-                    CustomConsole.WriteMessage("\n");
-                    CustomConsole.WriteErrorLine("Error: byte size mismatch, aborting file save");
-                    CustomConsole.WriteWarningLine("Length in bytes need to match, click on the Help button for more information");
-                    return;
-                }
-            }
 
             Program.carList = carList;
 
             try
             {
-                FileStream file = new FileStream(Program.setupWadPath, FileMode.OpenOrCreate);
-                file.Seek(9708, SeekOrigin.Begin);
+                Archive archive = new Archive();
+                archive.Load(Program.setupWadPath);
                 byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(toWrite);
-                file.Write(byteArray, 0, toWrite.Length);
-                file.Close();
+
+                byte[] newData = new byte[byteArray.Length+startingPoint];
+
+                for(int i = 0; i < startingPoint; i++)
+                {
+                    newData[i] = archive.Values.ElementAt(carRow)[i];
+                }
+                for(int i = 0; i < byteArray.Length; i++)
+                {
+                    newData[i + startingPoint] = byteArray[i];
+                }
+
+                archive.Remove(carRow.ToString());
+                archive.Add(carRow.ToString(), newData);
+
+                archive.Save(Program.setupWadPath);
             }
             catch(Exception)
             {
